@@ -1,0 +1,13 @@
+*.lib
+*.exe
+/bin
+/build
+*.so
+*.a
+/zlib/include/*
+/zlib/lib/*
+/include/jvm*.h
+/include/jni.h
+/include/jdwp*.h
+/include/jawt.h
+/include/win32
