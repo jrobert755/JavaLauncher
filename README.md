@@ -25,3 +25,12 @@ with Visual Studio, as that is the environment I am currently working
 on. As the features get closer to being finished, testing on all of
 the enivroments will begin, getting compatability for Windows, Linux,
 and Mac OSX.
+
+#Configuration file
+JavaLauncher uses a configuration file for setting up the java code to
+run. It has the following parameters:
+jarFile=something.jar
+mainClass=some.package.SomeClass
+classpath=SomeClasspath
+If a jarfile is specified, and it includes a manifest file with a
+main class property, then the above mainClass doesn't need to be set.

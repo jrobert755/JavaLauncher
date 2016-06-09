@@ -31,5 +31,8 @@
 #define _JGL2DLAUNCHER_CONFIG_H_
 
 #cmakedefine JRE_STRING "@JRE_STRING@"
+#define JRE_FOLDER_TEMPLATE "jre1.%i.0_%i"
+#define JRE_URL_TEMPLATE "http://download.oracle.com/otn-pub/java/jdk/%iu%i-b14/"
+#define JRE_FILENAME_TEMPLATE "jre-%iu%i-%s"
 
 #endif

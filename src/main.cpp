@@ -33,18 +33,28 @@
 #include "javalauncher_config.h"
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 #ifndef _WIN32
 #include <sys/stat.h>
 #endif
 
-int main(void) {
+int main(int argc, char* argv[]) {
+	if (argc != 2) {
+		printf("Usage: %s configFile", argv[0]);
+		exit(-1);
+	}
+	JNIProperties properties;
+	loadProperties(&properties, argv[1]);
+	if (properties.jarFile == "" && properties.classpath == "") {
+		printf("ERROR IN CONFIGURATION! jarFile OR classpath MUST BE SET!");
+	}
+
 	CURLcode res;
 	int majorVersion = 8;
 	int minorVersion = 92;
 
-	char* folderTemplate = "jre1.%i.0_%i";
 	char jreFolder[512];
-	sprintf(jreFolder, folderTemplate, majorVersion, minorVersion);
+	sprintf(jreFolder, JRE_FOLDER_TEMPLATE, majorVersion, minorVersion);
 
 	int statRet;
 #ifdef _WIN32
@@ -56,13 +66,11 @@ int main(void) {
 #endif
 	if (statRet == -1 && errno == ENOENT) {
 		printf("Aquiring JRE!\n");
-		char* urltemplate = "http://download.oracle.com/otn-pub/java/jdk/%iu%i-b14/";
 		char url[512];
-		sprintf(url, urltemplate, majorVersion, minorVersion);
+		sprintf(url, JRE_URL_TEMPLATE, majorVersion, minorVersion);
 
 		char outfilename[512];
-		char* filenameTemplate = "jre-%iu%i-%s";
-		sprintf(outfilename, filenameTemplate, majorVersion, minorVersion, JRE_STRING);
+		sprintf(outfilename, JRE_FILENAME_TEMPLATE, majorVersion, minorVersion, JRE_STRING);
 		strcat(outfilename, ".tar.gz");
 		strcat(url, outfilename);
 
@@ -80,7 +88,41 @@ int main(void) {
 	}
 
 	JNI* jni = allocateJNI(jreFolder);
-	addOption(jni, "-Djava.class.path=.\\Testing.jar");
+
+	if (properties.jarFile != "") {
+		if (properties.classpath != "") properties.classpath += ";" + properties.jarFile;
+		else properties.classpath = "-Djava.class.path=" + properties.jarFile;
+		
+		if (properties.mainClass == "") {
+			char* manifestFile = extractFileFromArchive("JGL2D.jar", "META-INF/MANIFEST.MF");
+			if (manifestFile == NULL) printf("ERROR! NO MANIFEST FILE!\n");
+			else {
+				std::string m = manifestFile;
+				int pos = m.find("Main-Class:");
+				if (pos == std::string::npos) {
+					printf("ERROR! NO MAIN CLASS SET!\n");
+					exit(-1);
+				}
+				pos += 11;
+				int end = m.find("\n", pos);
+				properties.mainClass = m.substr(pos, end-pos);
+				while (properties.mainClass[0] == ' ') properties.mainClass = properties.mainClass.substr(1);
+				if (properties.mainClass[properties.mainClass.length() - 1] == '\r') properties.mainClass = properties.mainClass.substr(0, properties.mainClass.length() - 1);
+			}
+		}
+		
+	}
+	else if (properties.mainClass == "") {
+		printf("ERROR! NO MAIN CLASS SET!\n");
+		exit(-1);
+	}
+
+	for (int i = 0; i < properties.mainClass.length(); i++) {
+		if (properties.mainClass[i] == '.') properties.mainClass[i] = '/';
+	}
+	
+	addOption(jni, properties.classpath.c_str());
+
 	jni->vm_arguments.version = JNI_VERSION_1_8;
 	jni->vm_arguments.ignoreUnrecognized = JNI_TRUE;
 	int jniInitRet = initializeJNI(jni);
@@ -88,14 +130,14 @@ int main(void) {
 
 	JNIEnv* env = jni->environment;
 
-	jclass cls = env->FindClass("Main");
+	jclass cls = env->FindClass(properties.mainClass.c_str());
 	if (cls != NULL) {
-		jmethodID mid = env->GetStaticMethodID(cls, "test", "(I)V");
+		jmethodID mid = env->GetStaticMethodID(cls, "main", "([Ljava/lang/String;)V");
 		if (mid != NULL) {
-			env->CallStaticVoidMethod(cls, mid, 100);
+			env->CallStaticVoidMethod(cls, mid, NULL);
 		}
 		else {
-			printf("ERROR! Unable to find the method given!\n");
+			printf("ERROR! Unable to find the main method!\n");
 		}
 	}
 	else {
@@ -103,8 +145,6 @@ int main(void) {
 	}
 
 	destroyJNI(jni);
-
-	getchar();
 
 	return 0;
 }

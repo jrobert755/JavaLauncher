@@ -28,6 +28,7 @@
  */
 
 #include "jni_util.h"
+#include <fstream>
 
 JNI* allocateJNI(const char* jrePath) {
 	JNI* ret = new JNI();
@@ -108,4 +109,36 @@ void destroyJNI(JNI* jni) {
 	}
 	delete[] jni->jrePath;
 	delete[] jni->options;
+}
+
+/*
+typedef struct {
+	char* fileData;
+	char* classpath;
+	char* jarFile;
+	char* mainClass;
+} JNIProperties;
+*/
+
+void loadProperties(JNIProperties* properties, const char* filename) {
+	std::ifstream in(filename);
+	properties->fileData = "";
+	properties->classpath = "";
+	properties->jarFile = "";
+	properties->mainClass = "";
+	while (in) {
+		std::string curLine;
+		std::getline(in, curLine);
+		int location;
+		if ((location = curLine.find("jarFile")) != std::string::npos) {
+			properties->jarFile = curLine.substr(8);
+		}
+		else if ((location = curLine.find("mainClass")) != std::string::npos) {
+			properties->mainClass = curLine.substr(10);
+		}
+		else if ((location = curLine.find("classpath")) != std::string::npos) {
+			properties->classpath = "-Djava.class.path=" + curLine.substr(10);
+		}
+	}
+	in.close();
 }

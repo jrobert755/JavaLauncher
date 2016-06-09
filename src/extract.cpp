@@ -170,3 +170,41 @@ void extract(const char *filename, int do_extract, int flags, char verbose)
 	archive_write_close(ext);
 	archive_write_free(ext);
 }
+
+char* extractFileFromArchive(const char* archiveFile, const char* filename) {
+	struct archive *a;
+	struct archive_entry *entry;
+	int r;
+
+	a = archive_read_new();
+	//archive_read_support_format_zip(a);
+	archive_read_support_format_all(a);
+	archive_read_support_compression_all(a);
+
+	if ((r = archive_read_open_filename(a, archiveFile, 10240)))
+		fail("archive_read_open_filename()",
+			archive_error_string(a), r);
+	for (;;) {
+		r = archive_read_next_header(a, &entry);
+		if (r == ARCHIVE_EOF)
+			break;
+		if (r != ARCHIVE_OK)
+			fail("archive_read_next_header()",
+				archive_error_string(a), 1);
+		//msg(archive_entry_pathname(entry));
+		if (strcmp(archive_entry_pathname(entry), filename) == 0) {
+			size_t total = archive_entry_size(entry);
+			char* buffer = new char[total + 1];
+			buffer[total] = 0;
+			size_t read = archive_read_data(a, buffer, total);
+			if (read <= 0) {
+				delete[] buffer;
+				return NULL;
+			}
+			return buffer;
+		}
+	}
+	archive_read_close(a);
+	archive_read_free(a);
+	return NULL;
+}

@@ -31,6 +31,7 @@
 #define _JGL2DLAUNCHER_JNI_UTIL_H_
 
 #include <jni.h>
+#include <string>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -56,5 +57,14 @@ int initializeJNI(JNI* jni);
 void addOption(JNI* jni, const char* option);
 jint createJVM(JNI* jni);
 void destroyJNI(JNI* jni);
+
+typedef struct {
+	std::string fileData;
+	std::string classpath;
+	std::string jarFile;
+	std::string mainClass;
+} JNIProperties;
+
+void loadProperties(JNIProperties* properties, const char* filename);
 
 #endif

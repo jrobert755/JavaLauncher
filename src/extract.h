@@ -38,5 +38,6 @@
 #endif
 
 void extract(const char *filename, int do_extract, int flags, char verbose);
+char* extractFileFromArchive(const char* archiveFile, const char* filename);
 
 #endif

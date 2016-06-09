@@ -57,6 +57,7 @@ file(GLOB header_files "src/*.h")
 if(WIN32)
 	include_directories("include/win32")
 	SET(ZLIB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/zlib/include" CACHE INTERNAL "zlib: Include Directories" FORCE)
+	SET(ZLIB_LIBRARY "${CMAKE_SOURCE_DIR}/zlib/lib/zlib.zip" CACHE INTERNAL "zlib: Lib" FORCE)
 	SET(ZLIB_LIBRARIES "${CMAKE_SOURCE_DIR}/zlib/lib/zlibstatic.lib" CACHE INTERNAL "zlib: Library" FORCE)
 endif()
 
