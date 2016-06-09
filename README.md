@@ -29,8 +29,10 @@ and Mac OSX.
 #Configuration file
 JavaLauncher uses a configuration file for setting up the java code to
 run. It has the following parameters:
-jarFile=something.jar
-mainClass=some.package.SomeClass
-classpath=SomeClasspath
+
+    jarFile=something.jar
+    mainClass=some.package.SomeClass
+    classpath=SomeClasspath
+
 If a jarfile is specified, and it includes a manifest file with a
 main class property, then the above mainClass doesn't need to be set.
